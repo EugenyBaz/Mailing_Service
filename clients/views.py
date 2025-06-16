@@ -1,4 +1,6 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+
+from clients.forms import ClientForm
 from clients.models import Client
 
 
@@ -17,12 +19,12 @@ class ClientCreateView(CreateView):
 
 
 
-class UpdateView(UpdateView):
+class ClientUpdateView(UpdateView):
     model = Client
     form_class = ClientForm
     template_name = "clients/client_form.html"
 
 
-class DeleteView(DeleteView):
+class ClientDeleteView(DeleteView):
     model = Client
     # success_url = reverse_lazy("catalog:home")

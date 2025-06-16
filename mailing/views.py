@@ -18,13 +18,13 @@ class MailingCreateView(CreateView):
     form_class = MailingForm
 
 
-class UpdateView(UpdateView):
+class MailingUpdateView(UpdateView):
     model = Mailing
     form_class = MailingForm
     template_name = "mailing/mailing_form.html"
 
 
-class DeleteView(DeleteView):
+class MailingDeleteView(DeleteView):
     model = Mailing
     # success_url = reverse_lazy("catalog:home")
 
