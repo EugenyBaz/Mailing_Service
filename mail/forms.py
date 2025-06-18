@@ -16,4 +16,4 @@ class StyleFormMixin:
 class MailForm(StyleFormMixin, ModelForm):
     class Meta:
         model = Mail
-        fields = "__all__"
+        fields = ['subject_letter','body_letter']
