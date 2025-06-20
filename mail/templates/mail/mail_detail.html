@@ -1,0 +1,46 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+
+<head>
+    <style>
+        .card-body {
+            position: relative; /* Устанавливаем родительский элемент как относительный */
+        }
+
+        .card-body .btn {
+            position: absolute; /* Фиксируем кнопку относительно родительского элемента */
+            bottom: 10px; /* Отступ от нижнего края */
+            left: 50%; /* Центрирование по горизонтали */
+            transform: translateX(-50%); /* Корректировка для точного центрирования */
+        }
+    </style>
+</head>
+
+<div class="container">
+    <div class="row text-center">
+        <div class="col">
+            <div class="card" style = "width: 25rem; height: 33rem;">
+
+                <div class="card-body">
+                    <p class="card-text h6">{{ object.subject_letter}}</p>
+                    <p class="card-text ">{{ object.ody_letter | truncatechars:100 }}</p>
+                    <p class="card-text h6" style ="margin-bottom: -1rem;"> Цена:  руб.</p>
+
+                </div>
+<!--                <div class="ms-3 mb-2">-->
+<!--                    <a class="p-2 btn btn-outline-primary mt-0" href="#">Купить</a>-->
+<!--                    {% if request.user == product.owner %}-->
+<!--                    <a class="p-2 btn btn-outline-primary" href="{% url 'catalog:product_update' product.id %}">Редактировать</a>-->
+<!--                    {% endif %}-->
+<!--                    {% if request.user == product.owner or perms.catalog.can_delete_any_product %}-->
+<!--                        <a class="p-2 btn btn-outline-primary" href="{% url 'catalog:product_delete' product.id %}">Удалить</a>-->
+<!--                    {% endif %}-->
+<!--                    <a class="p-2 btn btn-outline-primary" href="/">Назад</a>-->
+<!--                </div>-->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

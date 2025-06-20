@@ -1,3 +1,4 @@
+from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from mail.forms import MailForm
@@ -13,19 +14,25 @@ class MailDetailView(DetailView):
     model = Mail
 
 
+
 class MailCreateView(CreateView):
     model = Mail
     form_class = MailForm
+
+    def get_success_url(self):
+        return reverse_lazy('mail:mail_detail', kwargs={'pk': self.object.pk})
+
 
     def create_message(request):
         if request.method == 'POST':
             form = MailForm(request.POST)
             if form.is_valid():
-                form.save()
-                return redirect('mailing:mailing_create')  # перенаправляем на страницу создания рассылки
+                mail=form.save()
+                return redirect('mailing:mail_detail', pk=mail.id)  # перенаправляем на страницу создания рассылки
         else:
             form = MailForm()
-        return render(request, 'mail/create_message.html', {'form': form})
+        return render(request, 'mail/mail_form.html', {'form': form})
+
 
 
 class MailUpdateView(UpdateView):

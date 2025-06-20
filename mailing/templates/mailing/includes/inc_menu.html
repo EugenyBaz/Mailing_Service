@@ -4,7 +4,9 @@
 
 
     <nav class="ms-5">
-        <a class="p-2 btn btn-outline-primary" href="/">Рассылки</a>
+        <a class="p-2 btn btn-outline-primary" href="{% url 'mailing:mailing_list' %}">Рассылки</a>
+        <a class="p-2 btn btn-outline-primary" href="{% url 'mail:mail_list' %}">Сообщения</a>
+        <a class="p-2 btn btn-outline-primary" href="/">Клиенты</a>
         <a class="p-2 btn btn-outline-primary" href="/contacts/">Контакты</a>
         <a class="p-2 btn btn-outline-primary" href="#">Блог</a>
         {% if user.is_authenticated %}
