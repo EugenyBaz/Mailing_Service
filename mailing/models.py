@@ -14,6 +14,11 @@ class Mailing(models.Model):
     message = models.ForeignKey(Mail, on_delete=models.CASCADE, verbose_name="Сообщение")
     clients = models.ManyToManyField(Client, verbose_name="Получатели")
 
+    def client_names(self):
+        return ", ".join([client.name for client in self.clients.all()])
+
+    client_names.short_description = "Получатели"
+
     def __str__(self):
         return f"Рассылка '{self.message.subject_letter}' ({self.status})"
 

@@ -2,7 +2,6 @@ from django.forms import ModelForm, BooleanField
 from clients.models import Client
 
 
-
 class StyleFormMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

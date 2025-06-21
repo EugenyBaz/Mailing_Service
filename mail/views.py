@@ -8,10 +8,17 @@ from django.shortcuts import render, redirect
 
 class MailListView(ListView):
     model = Mail
+    context_object_name = 'mails'
 
 
 class MailDetailView(DetailView):
     model = Mail
+    context_object_name = 'mail'
+
+    def get_object(self, queryset=None):
+        self.object = super().get_object(queryset)
+        self.object.save()
+        return self.object
 
 
 
@@ -20,7 +27,7 @@ class MailCreateView(CreateView):
     form_class = MailForm
 
     def get_success_url(self):
-        return reverse_lazy('mail:mail_detail', kwargs={'pk': self.object.pk})
+        return reverse_lazy('mail:mail_list')
 
 
     def create_message(request):
@@ -37,11 +44,14 @@ class MailCreateView(CreateView):
 
 class MailUpdateView(UpdateView):
     model = Mail
+    context_object_name = 'mail'
     form_class = MailForm
     template_name = "mail/mail_form.html"
+    success_url = reverse_lazy("mail:mail_list")
 
 
 class MailDeleteView(DeleteView):
     model = Mail
-    # success_url = reverse_lazy("catalog:home")
+    context_object_name = 'mail'
+    success_url = reverse_lazy("mail:mail_list")
 
