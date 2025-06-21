@@ -3,23 +3,29 @@
 {% block content %}
 
 <div class = "container my-2">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-        <h1>Количество рассылок: {{ mailing.count }} шт.</h1>
-        {% for post in posts %}
+    <table class="table table-striped table-hover">
+
+        <h1>Количество рассылок: {{ mailings.count }} шт.</h1>
+        {% for mailing in mailings %}
             <article>
-                <h2><a href="{% url 'mailing:mailing_detail' mailing.id %}" style="font-size: 18px; color: black;">{{ message.subject_letter }}</a></h2>
-<!--                <h5>{{ post.title }}</h5>-->
-<!--                <p>{{ post.content}}</p>-->
-<!--                <a class="p-2 btn btn-outline-primary" href="{% url 'blog:post_detail' post.id %}">Просмотр поста</a>-->
+
+                <h2><a href="{% url 'mailing:mailing_detail' mailing.id %}" style="font-size: 18px; color: gray;">{{ mailing.message }}</a></h2>
+                <div class="d-flex align-items-center justify-content-between">
+                    <ul class="list-inline">
+                        <li class="list-inline-item">Статус : {{ mailing.get_status_display }}</li>
+                        <li class="list-inline-item">Дата и время первой отправки : {{ mailing.date_and_time_first_launched }}</li>
+                        <li class="list-inline-item">Дата и время окончания отправки : {{ mailing.date_and_time_finish_launched }}</li>
+                    </ul>
+                    <a href="{% url 'mailing:manual_launch' mailing.id %}" class="btn btn-success ml-0">Запустить вручную</a>
+                </div>
             </article>
         {% empty %}
             <p>Пока здесь нет ни одной записи!</p>
-
         {% endfor %}
-        <a href="{% url 'mailing:mailing_create' %}" class="btn btn-primary mt-3">Создать рассылку</a>
 
-        </div>
-    </div>
+        <a href="{% url 'mailing:mailing_create' %}" class="btn btn-primary mt-3 me-2">Создать рассылку</a>
+        <a href="{% url 'mailing:update_statuses' %}" class="btn btn-info mt-3"> Обновить статусы</a>
+
+    </table>
 </div>
 {% endblock %}

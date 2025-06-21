@@ -1,0 +1,16 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+
+<h1> Тема cообщения : {{ mailing.message.subject_letter }}</h1>
+<p> Дата и время первой отправки : {{ mailing.date_and_time_first_launched}}</p>
+<p> Дата и время окончания отправки : {{ mailing.date_and_time_finish_launched }}</p>
+<p> Статус : {{ mailing.get_status_display }}</p>
+<p> Получатели: {{ mailing.client_names }}</p>
+<p> Сообщение : {{ mailing.message.body_letter}}</p>
+<a class="p-2 btn btn-outline-primary" href="{% url 'mailing:mailing_update' mailing.id %}">Редактировать</a>
+<a class="p-2 btn btn-outline-primary" href="{% url 'mailing:mailing_delete' mailing.id %}">Удалить</a>
+{% endblock %}
+
+
+
+

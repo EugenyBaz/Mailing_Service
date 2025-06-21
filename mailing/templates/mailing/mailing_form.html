@@ -12,7 +12,12 @@
                     </div>
                     <nav class = "ms -5">
                          <button type="submit" class="btn btn-primary">Разместить</button>
-                         <a class="p-2 btn btn-outline-primary" href="/mailing/">Вернуться</a>
+                        {% if mailing.id %}
+                            <a class="p-2 btn btn-outline-primary" href="{% url 'mailing:mailing_detail' mailing.id %}">Вернуться</a>
+                        {% else %}
+                            <a class="p-2 btn btn-outline-primary" href="{% url 'mailing:mailing_list' %}">Вернуться</a>
+                        {% endif %}
+
                     </nav>
                 </div>
             </form>
