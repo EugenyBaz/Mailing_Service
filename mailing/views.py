@@ -1,25 +1,36 @@
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from mailing.forms import MailingForm
-from mailing.models import Mailing
+from mailing.models import Mailing, AttemptMailing
 from mail.models import Mail
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
+from django.contrib import messages
 
 
 class MailingListView(ListView):
     model = Mailing
     context_object_name = 'mailings'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Добавляем базовую статистику
+        context.update({
+            'total_mailings': Mailing.objects.count(),
+            'active_mailings': Mailing.objects.filter(status='launched').count(),
+            'unique_recipients': len(set(Mailing.objects.values_list('clients__email', flat=True))),
+        })
+        return context
+
 
 class MailingDetailView(DetailView):
     model = Mailing
     context_object_name = 'mailing'
 
-    def get_object(self, queryset=None):
-        self.object = super().get_object(queryset)
-        self.object.save()
-        return self.object
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['attempts'] = self.object.attempts.all()  # Добавляем попытки отправки
+        return context
 
 
 class MailingCreateView(CreateView):
@@ -60,7 +71,11 @@ class MailingDeleteView(DeleteView):
 
 def manual_launch(request, mailing_id):
     mailing = get_object_or_404(Mailing, pk=mailing_id)
-    mailing.send()  # Запускаем отправку вручную
+    try:
+        mailing.send()  # Пробуем отправить рассылку
+        messages.success(request, 'Рассылка успешно запущена!')
+    except Exception as e:
+        messages.error(request, f'Ошибка при запуске рассылки: {str(e)}')
     return redirect('mailing:mailing_list')
 
 def update_statuses(request):
@@ -69,3 +84,26 @@ def update_statuses(request):
         mailing.status = "completed"
         mailing.save()
     return redirect('mailing:mailing_list')
+
+
+
+def mailing_statistics(request):
+    total_mailings = Mailing.objects.count()
+    active_mailings = Mailing.objects.filter(status='launched').count()
+    unique_recipients = len(set(Mailing.objects.values_list('clients__email', flat=True)))
+
+    # Общая статистика по попыткам
+    total_attempts = AttemptMailing.objects.count()
+    successful_attempts = AttemptMailing.objects.filter(status='success').count()
+    failure_attempts = AttemptMailing.objects.filter(status='failure').count()
+
+    context = {
+        'total_mailings': total_mailings,
+        'active_mailings': active_mailings,
+        'unique_recipients': unique_recipients,
+        'total_attempts': total_attempts,
+        'successful_attempts': successful_attempts,
+        'failure_attempts': failure_attempts,
+    }
+
+    return render(request, 'mailing/mailing_statistics.html', context)

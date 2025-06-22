@@ -12,6 +12,7 @@ class Command(BaseCommand):
             try:
                 mailing = Mailing.objects.get(pk=mailing_id)
                 mailing.send()  # Вызов метода отправки
+                send_email(mailing)
                 self.stdout.write(f'Successfully sent mailing {mailing_id}')
             except Mailing.DoesNotExist:
                 self.stderr.write(f'Mailing #{mailing_id} does not exist.')

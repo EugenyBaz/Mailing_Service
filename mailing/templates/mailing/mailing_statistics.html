@@ -1,0 +1,57 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Статистика рассылок</h2>
+    <div class="row">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Количество рассылок</h5>
+                    <p class="card-text text-center">{{ total_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Активных рассылок</h5>
+                    <p class="card-text text-center">{{ active_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Уникальных получателей</h5>
+                    <p class="card-text text-center">{{ unique_recipients }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Всего попыток отправки</h5>
+                    <p class="card-text text-center">{{ total_attempts }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Успешных отправок</h5>
+                    <p class="card-text text-center">{{ successful_attempts }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Неудачных отправок</h5>
+                    <p class="card-text text-center">{{ failure_attempts }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

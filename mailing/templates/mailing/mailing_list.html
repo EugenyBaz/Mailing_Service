@@ -4,8 +4,12 @@
 
 <div class = "container my-2">
     <table class="table table-striped table-hover">
+        <div class="alert alert-info" role="alert">
+            <h4>Количество рассылок: {{ mailings.count }} шт.</h4>
+            <h4>Активных рассылок: {{ active_mailings }} шт.</h4>
+            <h4>Количество уникальных получателей: {{ unique_recipients }} шт.</h4>
+        </div>
 
-        <h1>Количество рассылок: {{ mailings.count }} шт.</h1>
         {% for mailing in mailings %}
             <article>
 
