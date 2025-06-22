@@ -10,10 +10,10 @@
         <a class="p-2 btn btn-outline-primary" href="{% url 'mailing:statistics' %}">Статистика</a>
         <a class="p-2 btn btn-outline-primary" href="/contacts/">Контакты</a>
         {% if user.is_authenticated %}
-            <a class="p-2 btn btn-outline-primary" href="#">Выход</a>
+            <a class="p-2 btn btn-outline-primary" href="{% url 'users:logout' %}">Выход</a>
         {% else %}
-            <a class="p-2 btn btn-outline-primary" href="#">Вход</a>
-            <a class="p-2 btn btn-outline-primary" href="#">Регистрация</a>
+            <a class="p-2 btn btn-outline-primary" href="{% url 'users:login' %}">Вход</a>
+            <a class="p-2 btn btn-outline-primary" href="{% url 'users:register' %}">Регистрация</a>
         {% endif %}
         <span class="text-right text-primary ">{{ user.email }}</span>
     </nav>

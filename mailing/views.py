@@ -6,11 +6,25 @@ from mail.models import Mail
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 from django.contrib import messages
+from django.db.models import Case, When, CharField, Value
 
 
 class MailingListView(ListView):
     model = Mailing
     context_object_name = 'mailings'
+
+    def get_queryset(self):
+        ORDER_STATUSES = [
+            When(status='created', then=Value(1)),
+            When(status='launched', then=Value(2)),
+            When(status='completed', then=Value(3)),
+        ]
+
+        # Сортировка объектов по статусу
+        sorted_mailings = Mailing.objects.annotate(
+            sort_order=Case(*ORDER_STATUSES, output_field=CharField())
+        ).order_by('sort_order')
+        return sorted_mailings
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -27,6 +27,7 @@ urlpatterns = [
     path("mail/", include("mail.urls", namespace="mail")),
     path("clients/", include("clients.urls", namespace="clients")),
     path("", RedirectView.as_view(url='/mailing/'), name='root_redirect'),
+    path('users/', include('users.urls', namespace='users')),
 
 ]
 

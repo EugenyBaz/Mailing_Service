@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "clients",
     "mailing",
     "mail",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -132,6 +133,11 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+AUTH_USER_MODEL = "users.User"
+
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -144,6 +150,19 @@ EMAIL_HOST_USER = "bd11es@yandex.ru"
 EMAIL_HOST_PASSWORD = "uuhkbzipthomexia"
 
 SERVER_EMAIL = EMAIL_HOST_USER
+
+LOGIN_URL = "users:login"
+
+
+CACHE_ENABLED = True
+
+if CACHE_ENABLED:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': 'redis://127.0.0.1:6379/1',
+        }
+    }
 
 LOGGING = {
     'version': 1,
@@ -169,3 +188,4 @@ LOGGING = {
         },
     },
 }
+
