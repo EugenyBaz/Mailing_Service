@@ -8,6 +8,7 @@ from django.views.generic import CreateView
 from users.forms import UserRegisterForm
 from users.models import User
 from config.settings import EMAIL_HOST_USER
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 
 
 class UserCreateView(CreateView):
@@ -49,3 +50,18 @@ def custom_logout(request):
     logout(request)
     messages.success(request, 'Вы успешно вышли.')
     return HttpResponseRedirect('/users/login/')
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'password_reset_form.html'
+    email_template_name = 'password_reset_email.html'
+    success_url = reverse_lazy('password_reset_done')
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'password_reset_done.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'password_reset_complete.html'
