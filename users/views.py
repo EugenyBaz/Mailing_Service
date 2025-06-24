@@ -9,6 +9,9 @@ from users.forms import UserRegisterForm
 from users.models import User
 from config.settings import EMAIL_HOST_USER
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.core.mail import EmailMessage
+from django.conf import settings
+
 
 
 class UserCreateView(CreateView):
@@ -54,14 +57,20 @@ def custom_logout(request):
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'password_reset_form.html'
     email_template_name = 'password_reset_email.html'
-    success_url = reverse_lazy('password_reset_done')
+    success_url = reverse_lazy('users:password_reset_done')
+
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        return result
+
+
 
 class CustomPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'password_reset_done.html'
 
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = 'password_reset_confirm.html'
-    success_url = reverse_lazy('password_reset_complete')
+    success_url = reverse_lazy('users:password_reset_complete')
 
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'password_reset_complete.html'
