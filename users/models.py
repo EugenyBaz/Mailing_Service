@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth.models import User
 
 
 
@@ -22,3 +23,12 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+
+class Statistic(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    successful_deliveries = models.PositiveIntegerField(default=0)
+    unsuccessful_attempts = models.PositiveIntegerField(default=0)
+    total_messages_sent = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f'Statistics for {self.user.username}'

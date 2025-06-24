@@ -4,13 +4,14 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from mail.forms import MailForm
 from mail.models import Mail
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 
-
+@login_required
 class MailListView(ListView):
     model = Mail
     context_object_name = 'mails'
 
-
+@login_required
 class MailDetailView(DetailView):
     model = Mail
     context_object_name = 'mail'
@@ -21,7 +22,7 @@ class MailDetailView(DetailView):
         return self.object
 
 
-
+@login_required
 class MailCreateView(CreateView):
     model = Mail
     form_class = MailForm
@@ -41,7 +42,7 @@ class MailCreateView(CreateView):
         return render(request, 'mail/mail_form.html', {'form': form})
 
 
-
+@login_required
 class MailUpdateView(UpdateView):
     model = Mail
     context_object_name = 'mail'
@@ -50,6 +51,7 @@ class MailUpdateView(UpdateView):
     success_url = reverse_lazy("mail:mail_list")
 
 
+@login_required
 class MailDeleteView(DeleteView):
     model = Mail
     context_object_name = 'mail'

@@ -7,8 +7,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 from django.contrib import messages
 from django.db.models import Case, When, CharField, Value
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
-
+@method_decorator(login_required, name='dispatch')
 class MailingListView(ListView):
     model = Mailing
     context_object_name = 'mailings'
@@ -47,6 +49,7 @@ class MailingDetailView(DetailView):
         return context
 
 
+@login_required
 class MailingCreateView(CreateView):
     model = Mailing
     form_class = MailingForm
@@ -70,6 +73,8 @@ class MailingCreateView(CreateView):
             form = MailingForm()
         return render(request, 'mailing/create_mailing.html', {'form': form})
 
+
+@login_required
 class MailingUpdateView(UpdateView):
     model = Mailing
     form_class = MailingForm
@@ -78,11 +83,13 @@ class MailingUpdateView(UpdateView):
     success_url = reverse_lazy("mailing:mailing_list")
 
 
+@login_required
 class MailingDeleteView(DeleteView):
     model = Mailing
     context_object_name = 'mailing'
     success_url = reverse_lazy("mailing:mailing_list")
 
+@login_required
 def manual_launch(request, mailing_id):
     mailing = get_object_or_404(Mailing, pk=mailing_id)
     try:
@@ -92,6 +99,7 @@ def manual_launch(request, mailing_id):
         messages.error(request, f'Ошибка при запуске рассылки: {str(e)}')
     return redirect('mailing:mailing_list')
 
+@login_required
 def update_statuses(request):
     expired_mailings = Mailing.objects.filter(date_and_time_finish_launched__lte=now()).filter(status="launched")
     for mailing in expired_mailings:
@@ -101,6 +109,7 @@ def update_statuses(request):
 
 
 
+@login_required
 def mailing_statistics(request):
     total_mailings = Mailing.objects.count()
     active_mailings = Mailing.objects.filter(status='launched').count()
