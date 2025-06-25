@@ -5,12 +5,13 @@ from django.utils.timezone import now
 from clients.models import Client
 from mail.models import Mail
 from config.settings import EMAIL_HOST_USER
+from django.conf import settings
 
 
 class Mailing(models.Model):
 
     STATUS_CHOICES = (("created", "Cоздана"), ("launched", "Запущена"), ("completed", "Завершена"))
-
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=2, verbose_name="Владелец")
     date_and_time_first_launched = models.DateTimeField(verbose_name="Дата и время первой отправки", blank=True, null=True)
     date_and_time_finish_launched = models.DateTimeField(verbose_name="Дата и время окончания отправки", blank = True, null=True)
     status = models.CharField(max_length=100, choices=STATUS_CHOICES, default = "created", verbose_name="Статус")

@@ -1,7 +1,9 @@
 from django.db import models
+from django.conf import settings
 
 
 class Mail(models.Model):
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=2, verbose_name="Автор")
     subject_letter = models.CharField(max_length=100, verbose_name="Тема письма")
     body_letter = models.TextField(verbose_name="Тело письма")
 

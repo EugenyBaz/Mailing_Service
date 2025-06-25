@@ -3,6 +3,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from mailing.forms import MailingForm
 from mailing.models import Mailing, AttemptMailing
 from mail.models import Mail
+from clients.models import Client
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 from django.contrib import messages
@@ -38,7 +39,7 @@ class MailingListView(ListView):
         })
         return context
 
-
+@method_decorator(login_required, name='dispatch')
 class MailingDetailView(DetailView):
     model = Mailing
     context_object_name = 'mailing'
@@ -49,7 +50,7 @@ class MailingDetailView(DetailView):
         return context
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class MailingCreateView(CreateView):
     model = Mailing
     form_class = MailingForm
@@ -64,6 +65,7 @@ class MailingCreateView(CreateView):
                 # Здесь дополнительно обрабатываем сохранение письма, если оно было создано новым
                 new_message_subject = request.POST.get('new_message_subject')
                 new_message_body = request.POST.get('new_message_body')
+                mailing.owner = request.user
                 if new_message_subject and new_message_body:
                     new_message = Mail.objects.create(subject_letter=new_message_subject, body_letter=new_message_body)
                     mailing.message = new_message
@@ -74,7 +76,7 @@ class MailingCreateView(CreateView):
         return render(request, 'mailing/create_mailing.html', {'form': form})
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class MailingUpdateView(UpdateView):
     model = Mailing
     form_class = MailingForm
@@ -83,7 +85,7 @@ class MailingUpdateView(UpdateView):
     success_url = reverse_lazy("mailing:mailing_list")
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class MailingDeleteView(DeleteView):
     model = Mailing
     context_object_name = 'mailing'
@@ -110,17 +112,31 @@ def update_statuses(request):
 
 
 @login_required
-def mailing_statistics(request):
-    total_mailings = Mailing.objects.count()
-    active_mailings = Mailing.objects.filter(status='launched').count()
-    unique_recipients = len(set(Mailing.objects.values_list('clients__email', flat=True)))
+def show_statistics(request):
+    user = request.user
+    is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
 
-    # Общая статистика по попыткам
-    total_attempts = AttemptMailing.objects.count()
-    successful_attempts = AttemptMailing.objects.filter(status='success').count()
-    failure_attempts = AttemptMailing.objects.filter(status='failure').count()
+    if is_manager:
+        # Показывать статистику для всех объектов
+        total_mailings = Mailing.objects.count()
+        active_mailings = Mailing.objects.filter(status='launched').count()
+        unique_recipients = len(set(Mailing.objects.values_list('clients__email', flat=True)))
+        total_attempts = AttemptMailing.objects.count()
+        successful_attempts = AttemptMailing.objects.filter(status='success').count()
+        failure_attempts = AttemptMailing.objects.filter(status='failure').count()
+    else:
+        # Отображаем статистику только для текущих рассылок пользователя
+        mailings = Mailing.objects.filter(message__author=user)
+
+        total_mailings = mailings.count()
+        active_mailings = mailings.filter(status='active').count()
+        total_attempts = AttemptMailing.objects.filter(mailing__message__author=user).count()
+        unique_recipients = len(set(mailings.values_list('clients__email', flat=True)))
+        successful_attempts = AttemptMailing.objects.filter(mailing__message__author=user, status='success').count()
+        failure_attempts = AttemptMailing.objects.filter(mailing__message__author=user, status='failure').count()
 
     context = {
+        'type': 'manager' if is_manager else 'user',
         'total_mailings': total_mailings,
         'active_mailings': active_mailings,
         'unique_recipients': unique_recipients,
@@ -129,4 +145,4 @@ def mailing_statistics(request):
         'failure_attempts': failure_attempts,
     }
 
-    return render(request, 'mailing/mailing_statistics.html', context)
+    return render(request, 'mailing/show_statistics.html', context)

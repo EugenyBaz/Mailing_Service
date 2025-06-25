@@ -17,4 +17,5 @@ class StyleFormMixin:
 class MailingForm(StyleFormMixin, ModelForm):
     class Meta:
         model = Mailing
+        exclude = ['owner']
         fields = "__all__"

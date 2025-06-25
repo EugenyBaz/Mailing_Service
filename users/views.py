@@ -17,9 +17,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.http import HttpResponseRedirect
 from django.contrib import messages
+from django.utils.decorators import method_decorator
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class UserCreateView(CreateView):
     model = User
     form_class = UserRegisterForm
@@ -63,7 +64,7 @@ def custom_logout(request):
     return HttpResponseRedirect('/users/login/')
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'password_reset_form.html'
     email_template_name = 'password_reset_email.html'
@@ -74,43 +75,18 @@ class CustomPasswordResetView(PasswordResetView):
         return result
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class CustomPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'password_reset_done.html'
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = 'password_reset_confirm.html'
     success_url = reverse_lazy('users:password_reset_complete')
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'password_reset_complete.html'
 
-@login_required
-def user_statistics(request):
-    # Получаем статистику только для текущего пользователя
-    current_user = request.user
-    user_stats = Statistic.objects.filter(user=current_user).first()
-
-    # Рассчитываем статистику по собственным рассылкам пользователя
-    mailings = Mailing.objects.filter(owner=current_user)
-    total_mailings = mailings.count()
-    active_mailings = mailings.filter(status='active').count()
-    attempts = AttemptMailing.objects.filter(mailing__owner=current_user)
-    total_attempts = attempts.count()
-    successful_attempts = attempts.filter(status='success').count()
-    failure_attempts = attempts.filter(status='failure').count()
-
-    context = {
-        'total_mailings': total_mailings,
-        'active_mailings': active_mailings,
-        'total_attempts': total_attempts,
-        'successful_attempts': successful_attempts,
-        'failure_attempts': failure_attempts,
-        'user_stats': user_stats,
-    }
-
-    return render(request, 'users/user_statistics.html', context)

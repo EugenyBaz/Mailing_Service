@@ -4,19 +4,20 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from clients.forms import ClientForm
 from clients.models import Client
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class ClientListView(ListView):
     model = Client
     context_object_name = 'clients'
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class ClientDetailView(DetailView):
     model = Client
     context_object_name = 'client'
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class ClientCreateView(CreateView):
     model = Client
     form_class = ClientForm
@@ -26,7 +27,7 @@ class ClientCreateView(CreateView):
 
 
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class ClientUpdateView(UpdateView):
     model = Client
     form_class = ClientForm
@@ -34,7 +35,7 @@ class ClientUpdateView(UpdateView):
     context_object_name = 'client'
     success_url = reverse_lazy("clients:client_list")
 
-@login_required
+@method_decorator(login_required, name='dispatch')
 class ClientDeleteView(DeleteView):
     model = Client
     context_object_name = 'client'
