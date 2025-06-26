@@ -17,26 +17,48 @@ class MailingListView(ListView):
     context_object_name = 'mailings'
 
     def get_queryset(self):
+        user = self.request.user
+        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+
+        if is_manager:
+            # Менеджеры видят ВСЕ рассылки
+            queryset = Mailing.objects.all()
+        else:
+            # Пользователи видят ТОЛЬКО свои рассылки
+            queryset = Mailing.objects.filter(owner=user)
+
         ORDER_STATUSES = [
             When(status='created', then=Value(1)),
             When(status='launched', then=Value(2)),
             When(status='completed', then=Value(3)),
         ]
 
-        # Сортировка объектов по статусу
-        sorted_mailings = Mailing.objects.annotate(
-            sort_order=Case(*ORDER_STATUSES, output_field=CharField())
-        ).order_by('sort_order')
+        # Применяем сортировку
+        sorted_mailings = queryset.annotate(sort_order=Case(*ORDER_STATUSES, output_field=CharField())).order_by(
+            'sort_order')
         return sorted_mailings
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Добавляем базовую статистику
-        context.update({
-            'total_mailings': Mailing.objects.count(),
-            'active_mailings': Mailing.objects.filter(status='launched').count(),
-            'unique_recipients': len(set(Mailing.objects.values_list('clients__email', flat=True))),
-        })
+        user = self.request.user
+        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+
+        if is_manager:
+            # Менеджеры видят всю статистику
+            context.update({
+                'total_mailings': Mailing.objects.count(),
+                'active_mailings': Mailing.objects.filter(status='launched').count(),
+                'unique_recipients': len(set(Mailing.objects.values_list('clients__email', flat=True))),
+            })
+        else:
+            # Пользователи видят только статистику по своим рассылкам
+            user_mailings = Mailing.objects.filter(owner=user)
+            context.update({
+                'total_mailings': user_mailings.count(),
+                'active_mailings': user_mailings.filter(status='launched').count(),
+                'unique_recipients': len(set(user_mailings.values_list('clients__email', flat=True))),
+            })
+
         return context
 
 @method_decorator(login_required, name='dispatch')
@@ -126,14 +148,14 @@ def show_statistics(request):
         failure_attempts = AttemptMailing.objects.filter(status='failure').count()
     else:
         # Отображаем статистику только для текущих рассылок пользователя
-        mailings = Mailing.objects.filter(message__author=user)
+        mailings = Mailing.objects.filter(owner=user)
 
         total_mailings = mailings.count()
-        active_mailings = mailings.filter(status='active').count()
-        total_attempts = AttemptMailing.objects.filter(mailing__message__author=user).count()
+        active_mailings = mailings.filter(status='launched').count()
+        total_attempts = AttemptMailing.objects.filter(mailing__in=mailings).count()
         unique_recipients = len(set(mailings.values_list('clients__email', flat=True)))
-        successful_attempts = AttemptMailing.objects.filter(mailing__message__author=user, status='success').count()
-        failure_attempts = AttemptMailing.objects.filter(mailing__message__author=user, status='failure').count()
+        successful_attempts = AttemptMailing.objects.filter(mailing__in=mailings, status='success').count()
+        failure_attempts = AttemptMailing.objects.filter(mailing__in=mailings, status='failure').count()
 
     context = {
         'type': 'manager' if is_manager else 'user',

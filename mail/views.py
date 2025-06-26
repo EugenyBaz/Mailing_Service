@@ -12,6 +12,21 @@ class MailListView(ListView):
     model = Mail
     context_object_name = 'mails'
 
+    def get_queryset(self):
+        user = self.request.user
+        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+
+        if is_manager:
+            # Менеджеры видят ВСЕ письма
+            queryset = Mail.objects.all()
+        else:
+            # Пользователи видят ТОЛЬКО свои письма
+            queryset = Mail.objects.filter(author=user)
+
+        return queryset
+
+
+
 @method_decorator(login_required, name='dispatch')
 class MailDetailView(DetailView):
     model = Mail
@@ -21,6 +36,19 @@ class MailDetailView(DetailView):
         self.object = super().get_object(queryset)
         self.object.save()
         return self.object
+
+    def get_queryset(self):
+        user = self.request.user
+        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+
+        if is_manager:
+            # Менеджеры могут редактировать любое письмо
+            queryset = Mail.objects.all()
+        else:
+            # Пользователи могут редактировать только свои письма
+            queryset = Mail.objects.filter(author=user)
+
+        return queryset
 
 
 @method_decorator(login_required, name='dispatch')
@@ -51,10 +79,36 @@ class MailUpdateView(UpdateView):
     template_name = "mail/mail_form.html"
     success_url = reverse_lazy("mail:mail_list")
 
+    def get_queryset(self):
+        user = self.request.user
+        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+
+        if is_manager:
+            # Менеджеры могут редактировать любое письмо
+            queryset = Mail.objects.all()
+        else:
+            # Пользователи могут редактировать только свои письма
+            queryset = Mail.objects.filter(author=user)
+
+        return queryset
+
 
 @method_decorator(login_required, name='dispatch')
 class MailDeleteView(DeleteView):
     model = Mail
     context_object_name = 'mail'
     success_url = reverse_lazy("mail:mail_list")
+
+    def get_queryset(self):
+        user = self.request.user
+        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+
+        if is_manager:
+            # Менеджеры могут удалить любое письмо
+            queryset = Mail.objects.all()
+        else:
+            # Пользователи могут удалить только свои письма
+            queryset = Mail.objects.filter(author=user)
+
+        return queryset
 

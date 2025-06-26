@@ -10,9 +10,6 @@ from users.forms import UserRegisterForm
 from users.models import User
 from config.settings import EMAIL_HOST_USER
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
-from django.core.mail import EmailMessage
-from django.conf import settings
-from users.models import Statistic
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.http import HttpResponseRedirect
