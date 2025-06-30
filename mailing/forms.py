@@ -7,11 +7,11 @@ from mailing.models import Mailing, Mail
 class StyleFormMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field_name, fild in self.fields.items():
-            if isinstance(fild, BooleanField):
-                fild.widget.attrs["class"] = "form-check-input"
+        for field_name, field in self.fields.items():
+            if isinstance(field, BooleanField):
+                field.widget.attrs["class"] = "form-check-input"
             else:
-                fild.widget.attrs["class"] = "form-control"
+                field.widget.attrs["class"] = "form-control"
 
 
 class MailingForm(StyleFormMixin, ModelForm):
@@ -19,3 +19,9 @@ class MailingForm(StyleFormMixin, ModelForm):
         model = Mailing
         exclude = ['owner']
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Передаем пользователя из view
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['message'].queryset = Mail.objects.filter(author=user)

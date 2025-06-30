@@ -3,6 +3,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from mailing.forms import MailingForm
 from mailing.models import Mailing, AttemptMailing
 from mail.models import Mail
+from django.contrib.auth import get_user_model
 from clients.models import Client
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
@@ -10,6 +11,7 @@ from django.contrib import messages
 from django.db.models import Case, When, CharField, Value
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+import smtplib
 
 @method_decorator(login_required, name='dispatch')
 class MailingListView(ListView):
@@ -21,10 +23,8 @@ class MailingListView(ListView):
         is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
 
         if is_manager:
-            # Менеджеры видят ВСЕ рассылки
             queryset = Mailing.objects.all()
         else:
-            # Пользователи видят ТОЛЬКО свои рассылки
             queryset = Mailing.objects.filter(owner=user)
 
         ORDER_STATUSES = [
@@ -33,9 +33,7 @@ class MailingListView(ListView):
             When(status='completed', then=Value(3)),
         ]
 
-        # Применяем сортировку
-        sorted_mailings = queryset.annotate(sort_order=Case(*ORDER_STATUSES, output_field=CharField())).order_by(
-            'sort_order')
+        sorted_mailings = queryset.annotate(sort_order=Case(*ORDER_STATUSES, output_field=CharField())).order_by('sort_order')
         return sorted_mailings
 
     def get_context_data(self, **kwargs):
@@ -44,22 +42,24 @@ class MailingListView(ListView):
         is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
 
         if is_manager:
-            # Менеджеры видят всю статистику
+            # Общую статистику для менеджеров
             context.update({
-                'total_mailings': Mailing.objects.count(),
-                'active_mailings': Mailing.objects.filter(status='launched').count(),
-                'unique_recipients': len(set(Mailing.objects.values_list('clients__email', flat=True))),
+                'total_mailings': Mailing.objects.count(),                   # Всего рассылок
+                'active_mailings': Mailing.objects.filter(status='launched').count(),  # Активных рассылок
+                'unique_recipients': len(set(Client.objects.values_list('email', flat=True))),  # Уникальные получатели
             })
         else:
-            # Пользователи видят только статистику по своим рассылкам
+            # Индивидуальную статистику для обычных пользователей
             user_mailings = Mailing.objects.filter(owner=user)
             context.update({
-                'total_mailings': user_mailings.count(),
-                'active_mailings': user_mailings.filter(status='launched').count(),
-                'unique_recipients': len(set(user_mailings.values_list('clients__email', flat=True))),
+                'total_mailings': user_mailings.count(),                     # Всего рассылок
+                'active_mailings': user_mailings.filter(status='launched').count(),  # Активных рассылок
+                'unique_recipients': len(set(Client.objects.filter(mailing__owner=user).values_list('email', flat=True))),  # Уникальные получатели
             })
 
+        context['is_manager'] = is_manager
         return context
+
 
 @method_decorator(login_required, name='dispatch')
 class MailingDetailView(DetailView):
@@ -78,6 +78,20 @@ class MailingCreateView(CreateView):
     form_class = MailingForm
     context_object_name = 'mailing'
     success_url = reverse_lazy("mailing:mailing_list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        """
+        Назначаем владельца рассылки перед сохранением объекта.
+        """
+        mailing = form.save(commit=False)
+        mailing.owner = self.request.user  # Присваиваем владельца рассылки
+        mailing.save()
+        return super().form_valid(form)
 
     def create_mailing(request):
         if request.method == 'POST':
@@ -117,10 +131,25 @@ class MailingDeleteView(DeleteView):
 def manual_launch(request, mailing_id):
     mailing = get_object_or_404(Mailing, pk=mailing_id)
     try:
-        mailing.send()  # Пробуем отправить рассылку
-        messages.success(request, 'Рассылка успешно запущена!')
+        result = mailing.send()  # Метод send() должен возвращать True или False
+        if result:
+            messages.success(request, 'Рассылка успешно отправлена!')
+        else:
+            messages.warning(request, 'Рассылка была принята, но возможна задержка доставки.')
+    except smtplib.SMTPRecipientsRefused as e:
+        messages.error(request, f'Ошибка: Один или несколько адресов получателей являются недействительными.')
+    except smtplib.SMTPSenderRefused as e:
+        messages.error(request, f'Ошибка: Почтовый сервер отказал в отправителе.')
+    except smtplib.SMTPAuthenticationError as e:
+        messages.error(request, f'Ошибка: Невозможна авторизация на сервере отправки.')
+    except smtplib.SMTPConnectError as e:
+        messages.error(request, f'Ошибка: Нет соединения с сервером отправки.')
+    except smtplib.SMTPHeloError as e:
+        messages.error(request, f'Ошибка: Сервер отказался отвечать на запрос HELO.')
+    except smtplib.SMTPDataError as e:
+        messages.error(request, f'Ошибка: Недопустимые данные при отправке письма.')
     except Exception as e:
-        messages.error(request, f'Ошибка при запуске рассылки: {str(e)}')
+        messages.error(request, f'Общая ошибка при отправке письма: {str(e)}.')
     return redirect('mailing:mailing_list')
 
 @login_required
@@ -130,7 +159,6 @@ def update_statuses(request):
         mailing.status = "completed"
         mailing.save()
     return redirect('mailing:mailing_list')
-
 
 
 @login_required
@@ -157,6 +185,7 @@ def show_statistics(request):
         successful_attempts = AttemptMailing.objects.filter(mailing__in=mailings, status='success').count()
         failure_attempts = AttemptMailing.objects.filter(mailing__in=mailings, status='failure').count()
 
+    # Создаем словарь контекста и добавляем туда флаг is_manager
     context = {
         'type': 'manager' if is_manager else 'user',
         'total_mailings': total_mailings,
@@ -165,6 +194,28 @@ def show_statistics(request):
         'total_attempts': total_attempts,
         'successful_attempts': successful_attempts,
         'failure_attempts': failure_attempts,
+        'is_manager': is_manager,  # <-- Ключевое изменение
     }
 
     return render(request, 'mailing/show_statistics.html', context)
+
+@login_required
+def cancel_mailing(request, mailing_id):
+    mailing = get_object_or_404(Mailing, id=mailing_id)
+    user = request.user
+    is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+
+    if not is_manager:
+        messages.error(request, 'Только менеджеры могут отменять рассылки.')
+        return redirect('mailing:mailing_list')
+
+    # Устанавливаем статус рассылки как "завершено"
+    mailing.status = 'completed'
+    mailing.save()
+
+    messages.success(request, 'Рассылка успешно отменена.')
+    return redirect('mailing:mailing_list')
+
+
+
+

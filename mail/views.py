@@ -25,7 +25,12 @@ class MailListView(ListView):
 
         return queryset
 
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        is_manager = user.is_superuser or user.groups.filter(name='Manager').exists()
+        context['is_manager'] = is_manager
+        return context
 
 @method_decorator(login_required, name='dispatch')
 class MailDetailView(DetailView):
@@ -33,9 +38,8 @@ class MailDetailView(DetailView):
     context_object_name = 'mail'
 
     def get_object(self, queryset=None):
-        self.object = super().get_object(queryset)
-        self.object.save()
-        return self.object
+        obj = super().get_object(queryset)
+        return obj
 
     def get_queryset(self):
         user = self.request.user
@@ -59,13 +63,21 @@ class MailCreateView(CreateView):
     def get_success_url(self):
         return reverse_lazy('mail:mail_list')
 
+    def form_valid(self, form):
+        mail = form.save(commit=False)
+        mail.author = self.request.user
+        mail.save()
+        return super().form_valid(form)
+
 
     def create_message(request):
         if request.method == 'POST':
             form = MailForm(request.POST)
             if form.is_valid():
-                mail=form.save()
-                return redirect('mailing:mail_detail', pk=mail.id)  # перенаправляем на страницу создания рассылки
+                mail = form.save(commit=False)
+                mail.author = request.user
+                mail.save()
+                return redirect('mail:mail_list')  # перенаправляем на страницу создания рассылки
         else:
             form = MailForm()
         return render(request, 'mail/mail_form.html', {'form': form})
@@ -111,4 +123,6 @@ class MailDeleteView(DeleteView):
             queryset = Mail.objects.filter(author=user)
 
         return queryset
+
+
 

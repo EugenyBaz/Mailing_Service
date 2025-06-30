@@ -5,16 +5,18 @@ from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse_lazy, reverse
 from django.views.generic import CreateView
 
-from mailing.models import Mailing, AttemptMailing
 from users.forms import UserRegisterForm
 from users.models import User
 from config.settings import EMAIL_HOST_USER
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.utils.decorators import method_decorator
+from django.shortcuts import render
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 
 
 @method_decorator(login_required, name='dispatch')
@@ -87,3 +89,49 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'password_reset_complete.html'
 
+User = get_user_model()
+
+
+@login_required
+def users_list_view(request):
+    users = User.objects.all()
+    is_manager = request.user.is_superuser or request.user.groups.filter(name='Manager').exists()
+
+    # Печать текущих значений для диагностики
+    print(f"Request user: {request.user}")
+    print(f"User's groups: {request.user.groups.values_list('name', flat=True)}")
+    print(f"Is manager: {is_manager}")
+
+    context = {
+        'users': users,
+        'is_manager': is_manager
+    }
+    return render(request, 'users/users_list.html', context)
+
+@login_required
+def update_user_status(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        next_url = request.POST.get('next')
+        is_active = 'is_active' not in request.POST  # Если чекбокс снят, значит активный, иначе нет
+
+        # Получаем пользователя, чей статус хотим поменять
+        try:
+            target_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            messages.error(request, 'Пользователь не найден.')
+            return redirect(next_url)
+
+        # Проверяем, не пытаемся ли мы заблокировать самого себя
+        if target_user == request.user:
+            messages.warning(request, 'Нельзя заблокировать самого себя.')
+            return redirect(next_url)
+
+        # Если всё хорошо, обновляем статус
+        target_user.is_active = is_active
+        target_user.save()
+        messages.success(request, 'Статус пользователя успешно обновлён.')
+
+        return redirect(next_url)
+    else:
+        return redirect('users/users_list.html')

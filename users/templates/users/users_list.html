@@ -1,0 +1,36 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+    <h2>Список пользователей</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Заблокирован?</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if is_manager and user != request.user %}
+                        <form action="{% url 'users:update_user_status' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <label>
+                                <input type="checkbox" name="is_active" {% if not user.is_active %}checked{% endif %}> Заблокирован
+                            </label>
+                            <button type="submit" class="btn btn-link">Сохранить</button>
+                        </form>
+                    {% elif user == request.user %}
+                        <em>(Вы не можете вот так взять и заблокировать себя)</em>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
