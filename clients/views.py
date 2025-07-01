@@ -5,8 +5,10 @@ from clients.forms import ClientForm
 from clients.models import Client
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 @method_decorator(login_required, name='dispatch')
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class ClientListView(ListView):
     model = Client
     context_object_name = 'clients'

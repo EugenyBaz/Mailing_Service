@@ -11,9 +11,11 @@ from django.contrib import messages
 from django.db.models import Case, When, CharField, Value
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 import smtplib
 
 @method_decorator(login_required, name='dispatch')
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class MailingListView(ListView):
     model = Mailing
     context_object_name = 'mailings'
