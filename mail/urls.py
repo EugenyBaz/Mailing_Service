@@ -1,8 +1,9 @@
-from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import path
+
 from mail.apps import MailConfig
-from mail.views import MailListView, MailDetailView, MailCreateView, MailUpdateView, MailDeleteView
+from mail.views import MailCreateView, MailDeleteView, MailDetailView, MailListView, MailUpdateView
 
 app_name = MailConfig.name
 

@@ -1,8 +1,10 @@
-from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import path
+
 from mailing.apps import MailingConfig
-from mailing.views import MailingListView, MailingDetailView, MailingCreateView, MailingUpdateView, MailingDeleteView,  manual_launch, update_statuses, show_statistics, cancel_mailing
+from mailing.views import (MailingCreateView, MailingDeleteView, MailingDetailView, MailingListView, MailingUpdateView,
+                           cancel_mailing, manual_launch, show_statistics, update_statuses)
 
 app_name = MailingConfig.name
 
@@ -12,10 +14,10 @@ urlpatterns = [
     path("create/", MailingCreateView.as_view(), name="mailing_create"),
     path("<int:pk>/update/", MailingUpdateView.as_view(), name="mailing_update"),
     path("<int:pk>/delete/", MailingDeleteView.as_view(), name="mailing_delete"),
-    path('manual-launch/<int:mailing_id>/', manual_launch, name='manual_launch'),
-    path('update-status/', update_statuses, name='update_statuses'),
-    path('statistics/', show_statistics, name='show_statistics'),
-    path('cancel-mailing/<int:mailing_id>/', cancel_mailing, name='cancel_mailing'),
+    path("manual-launch/<int:mailing_id>/", manual_launch, name="manual_launch"),
+    path("update-status/", update_statuses, name="update_statuses"),
+    path("statistics/", show_statistics, name="show_statistics"),
+    path("cancel-mailing/<int:mailing_id>/", cancel_mailing, name="cancel_mailing"),
 ]
 
 

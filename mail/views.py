@@ -1,22 +1,24 @@
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from mail.forms import MailForm
 from mail.models import Mail
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 
-@method_decorator(login_required, name='dispatch')
-@method_decorator(cache_page(60 * 15), name='dispatch')
+
+@method_decorator(login_required, name="dispatch")
+@method_decorator(cache_page(60 * 15), name="dispatch")
 class MailListView(ListView):
     model = Mail
-    context_object_name = 'mails'
+    context_object_name = "mails"
 
     def get_queryset(self):
         user = self.request.user
-        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+        is_manager = user.is_staff or user.groups.filter(name="Manager").exists()
 
         if is_manager:
             # Менеджеры видят ВСЕ письма
@@ -30,14 +32,15 @@ class MailListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        is_manager = user.is_superuser or user.groups.filter(name='Manager').exists()
-        context['is_manager'] = is_manager
+        is_manager = user.is_superuser or user.groups.filter(name="Manager").exists()
+        context["is_manager"] = is_manager
         return context
 
-@method_decorator(login_required, name='dispatch')
+
+@method_decorator(login_required, name="dispatch")
 class MailDetailView(DetailView):
     model = Mail
-    context_object_name = 'mail'
+    context_object_name = "mail"
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
@@ -45,7 +48,7 @@ class MailDetailView(DetailView):
 
     def get_queryset(self):
         user = self.request.user
-        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+        is_manager = user.is_staff or user.groups.filter(name="Manager").exists()
 
         if is_manager:
             # Менеджеры могут редактировать любое письмо
@@ -57,13 +60,13 @@ class MailDetailView(DetailView):
         return queryset
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class MailCreateView(CreateView):
     model = Mail
     form_class = MailForm
 
     def get_success_url(self):
-        return reverse_lazy('mail:mail_list')
+        return reverse_lazy("mail:mail_list")
 
     def form_valid(self, form):
         mail = form.save(commit=False)
@@ -71,51 +74,50 @@ class MailCreateView(CreateView):
         mail.save()
         return super().form_valid(form)
 
-
     def create_message(request):
-        if request.method == 'POST':
+        if request.method == "POST":
             form = MailForm(request.POST)
             if form.is_valid():
                 mail = form.save(commit=False)
                 mail.author = request.user
                 mail.save()
-                return redirect('mail:mail_list')  # перенаправляем на страницу создания рассылки
+                return redirect("mail:mail_list")  # перенаправляем на страницу создания рассылки
         else:
             form = MailForm()
-        return render(request, 'mail/mail_form.html', {'form': form})
+        return render(request, "mail/mail_form.html", {"form": form})
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class MailUpdateView(UpdateView):
     model = Mail
-    context_object_name = 'mail'
+    context_object_name = "mail"
     form_class = MailForm
     template_name = "mail/mail_form.html"
     success_url = reverse_lazy("mail:mail_list")
 
+    def is_manager(self):
+        return self.request.user.is_staff or self.request.user.groups.filter(name="Manager").exists()
+
+    def dispatch(self, request, *args, **kwargs):
+        # Менеджеры могут читать, но не редактировать
+        if self.is_manager:
+            return HttpResponseForbidden("Вам запрещено редактировать это сообщение.")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
-        user = self.request.user
-        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
-
-        if is_manager:
-            # Менеджеры могут редактировать любое письмо
-            queryset = Mail.objects.all()
-        else:
-            # Пользователи могут редактировать только свои письма
-            queryset = Mail.objects.filter(author=user)
-
-        return queryset
+        # Обычные пользователи могут редактировать только свои письма
+        return Mail.objects.filter(author=self.request.user)
 
 
-@method_decorator(login_required, name='dispatch')
+@method_decorator(login_required, name="dispatch")
 class MailDeleteView(DeleteView):
     model = Mail
-    context_object_name = 'mail'
+    context_object_name = "mail"
     success_url = reverse_lazy("mail:mail_list")
 
     def get_queryset(self):
         user = self.request.user
-        is_manager = user.is_staff or user.groups.filter(name='Manager').exists()
+        is_manager = user.is_staff or user.groups.filter(name="Manager").exists()
 
         if is_manager:
             # Менеджеры могут удалить любое письмо
@@ -125,6 +127,3 @@ class MailDeleteView(DeleteView):
             queryset = Mail.objects.filter(author=user)
 
         return queryset
-
-
-

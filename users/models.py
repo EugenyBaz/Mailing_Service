@@ -1,7 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.models import User
-
 
 
 class User(AbstractUser):
@@ -14,7 +12,6 @@ class User(AbstractUser):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
-
 
     class Meta:
         verbose_name = "Пользователь"
@@ -31,4 +28,4 @@ class Statistic(models.Model):
     total_messages_sent = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f'Statistics for {self.user.username}'
+        return f"Statistics for {self.user.username}"

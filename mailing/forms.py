@@ -1,7 +1,6 @@
-from django.forms import ModelForm, BooleanField
-from mailing.models import Mailing, Mail
+from django.forms import BooleanField, ModelForm
 
-
+from mailing.models import Mail, Mailing
 
 
 class StyleFormMixin:
@@ -17,11 +16,11 @@ class StyleFormMixin:
 class MailingForm(StyleFormMixin, ModelForm):
     class Meta:
         model = Mailing
-        exclude = ['owner']
+        exclude = ["owner"]
         fields = "__all__"
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)  # Передаем пользователя из view
+        user = kwargs.pop("user", None)  # Передаем пользователя из view
         super().__init__(*args, **kwargs)
         if user:
-            self.fields['message'].queryset = Mail.objects.filter(author=user)
+            self.fields["message"].queryset = Mail.objects.filter(author=user)

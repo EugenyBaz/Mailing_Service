@@ -15,10 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.contrib import admin
-from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import include, path
 from django.views.generic import RedirectView
 
 urlpatterns = [
@@ -26,9 +26,8 @@ urlpatterns = [
     path("mailing/", include("mailing.urls", namespace="mailing")),
     path("mail/", include("mail.urls", namespace="mail")),
     path("clients/", include("clients.urls", namespace="clients")),
-    path("", RedirectView.as_view(url='/mailing/'), name='root_redirect'),
-    path('users/', include('users.urls', namespace='users')),
-
+    path("", RedirectView.as_view(url="/mailing/"), name="root_redirect"),
+    path("users/", include("users.urls", namespace="users")),
 ]
 
 if settings.DEBUG:

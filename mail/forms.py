@@ -1,5 +1,7 @@
-from django.forms import ModelForm, BooleanField
+from django.forms import BooleanField, ModelForm
+
 from mail.models import Mail
+
 
 class StyleFormMixin:
     def __init__(self, *args, **kwargs):
@@ -14,4 +16,4 @@ class StyleFormMixin:
 class MailForm(StyleFormMixin, ModelForm):
     class Meta:
         model = Mail
-        fields = ['subject_letter','body_letter']
+        fields = ["subject_letter", "body_letter"]
