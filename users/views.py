@@ -16,6 +16,7 @@ from django.views.generic import CreateView
 from config.settings import EMAIL_HOST_USER
 from users.forms import UserRegisterForm
 from users.models import User
+from django.core.cache import cache
 
 
 @method_decorator(login_required, name="dispatch")
@@ -51,6 +52,7 @@ def email_verification(request, token):
     user = get_object_or_404(User, token=token)
     user.is_active = True
     user.save()
+    cache.clear()
     return redirect(reverse("users:login"))
 
 
@@ -59,6 +61,7 @@ def custom_logout(request):
     """Пользователь выходит из системы."""
     logout(request)
     messages.success(request, "Вы успешно вышли.")
+    cache.clear()
     return HttpResponseRedirect("/users/login/")
 
 
@@ -118,18 +121,21 @@ def update_user_status(request):
             target_user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             messages.error(request, "Пользователь не найден.")
+            cache.clear()
             return redirect(next_url)
 
         # Проверяем, не пытаемся ли мы заблокировать самого себя
         if target_user == request.user:
             messages.warning(request, "Нельзя заблокировать самого себя.")
+            cache.clear()
             return redirect(next_url)
 
         # Если всё хорошо, обновляем статус
         target_user.is_active = is_active
         target_user.save()
         messages.success(request, "Статус пользователя успешно обновлён.")
-
+        cache.clear()
         return redirect(next_url)
     else:
+        cache.clear()
         return redirect("users/users_list.html")

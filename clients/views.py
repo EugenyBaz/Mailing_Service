@@ -3,7 +3,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-
+from django.core.cache import cache
 from clients.forms import ClientForm
 from clients.models import Client
 
@@ -20,9 +20,11 @@ class ClientListView(ListView):
 
         if is_manager:
             # Менеджеры видят всех клиентов
+            cache.clear()
             queryset = Client.objects.all()
         else:
             # Пользователь видит только своих клиентов
+            cache.clear()
             queryset = Client.objects.filter(owner=user)
 
         return queryset
@@ -32,6 +34,7 @@ class ClientListView(ListView):
         user = self.request.user
         is_manager = user.is_superuser or user.groups.filter(name="Manager").exists()
         context["is_manager"] = is_manager
+        cache.clear()
         return context
 
 

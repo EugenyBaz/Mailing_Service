@@ -12,6 +12,7 @@ from clients.models import Client
 from mail.models import Mail
 from mailing.forms import MailingForm
 from mailing.models import AttemptMailing, Mailing
+from django.core.cache import cache
 
 
 @method_decorator(login_required, name="dispatch")
@@ -38,6 +39,7 @@ class MailingListView(ListView):
         sorted_mailings = queryset.annotate(sort_order=Case(*ORDER_STATUSES, output_field=CharField())).order_by(
             "sort_order"
         )
+        cache.clear()
         return sorted_mailings
 
     def get_context_data(self, **kwargs):
@@ -70,6 +72,7 @@ class MailingListView(ListView):
             )
 
         context["is_manager"] = is_manager
+        cache.clear()
         return context
 
 
@@ -81,6 +84,7 @@ class MailingDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["attempts"] = self.object.attempts.all()  # Добавляем попытки отправки
+        cache.clear()
         return context
 
 
@@ -103,6 +107,7 @@ class MailingCreateView(CreateView):
         mailing = form.save(commit=False)
         mailing.owner = self.request.user  # Присваиваем владельца рассылки
         mailing.save()
+        cache.clear()
         return super().form_valid(form)
 
     def create_mailing(request):
@@ -118,9 +123,11 @@ class MailingCreateView(CreateView):
                     new_message = Mail.objects.create(subject_letter=new_message_subject, body_letter=new_message_body)
                     mailing.message = new_message
                 mailing.save()
+                cache.clear()
                 return redirect("success_url")
         else:
             form = MailingForm()
+        cache.clear()
         return render(request, "mailing/create_mailing.html", {"form": form})
 
 
@@ -130,6 +137,7 @@ class MailingUpdateView(UpdateView):
     form_class = MailingForm
     context_object_name = "mailing"
     template_name = "mailing/mailing_form.html"
+    cache.clear()
     success_url = reverse_lazy("mailing:mailing_list")
 
 
@@ -137,6 +145,7 @@ class MailingUpdateView(UpdateView):
 class MailingDeleteView(DeleteView):
     model = Mailing
     context_object_name = "mailing"
+    cache.clear()
     success_url = reverse_lazy("mailing:mailing_list")
 
 
@@ -163,6 +172,7 @@ def manual_launch(request, mailing_id):
         messages.error(request, "Ошибка: Недопустимые данные при отправке письма.")
     except Exception as e:
         messages.error(request, f"Общая ошибка при отправке письма: {str(e)}.")
+    cache.clear()
     return redirect("mailing:mailing_list")
 
 
@@ -172,6 +182,7 @@ def update_statuses(request):
     for mailing in expired_mailings:
         mailing.status = "completed"
         mailing.save()
+    cache.clear()
     return redirect("mailing:mailing_list")
 
 
@@ -210,7 +221,7 @@ def show_statistics(request):
         "failure_attempts": failure_attempts,
         "is_manager": is_manager,  # <-- Ключевое изменение
     }
-
+    cache.clear()
     return render(request, "mailing/show_statistics.html", context)
 
 
@@ -222,11 +233,14 @@ def cancel_mailing(request, mailing_id):
 
     if not is_manager:
         messages.error(request, "Только менеджеры могут отменять рассылки.")
+        cache.clear()
         return redirect("mailing:mailing_list")
 
     # Устанавливаем статус рассылки как "завершено"
     mailing.status = "completed"
     mailing.save()
+    cache.clear()
 
     messages.success(request, "Рассылка успешно отменена.")
+    cache.clear()
     return redirect("mailing:mailing_list")

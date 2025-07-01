@@ -8,6 +8,8 @@
             <h4>Количество уникальных получателей: {{ unique_recipients }} шт.</h4>
         </div>
 
+        <!-- Кнопки создания рассылки и обновления статусов -->
+
         {% for mailing in mailings %}
             <article>
                 <h2><a href="{% url 'mailing:mailing_detail' mailing.id %}" style="font-size: 18px; color: gray;">{{ mailing.message.subject_letter }}</a></h2> <!-- Выводим тему письма -->
@@ -31,6 +33,11 @@
         {% empty %}
             <p>Нет активных рассылок.</p>
         {% endfor %}
+        <div class="mb-3 d-flex justify-content-start">
+            <a href="{% url 'mailing:mailing_create' %}" class="btn btn-primary">Создать рассылку</a>
+            <a href="{% url 'mailing:update_statuses' %}" class="btn btn-info ms-2">Обновить статусы</a>
+        </div>
+
     </table>
 </div>
 {% endblock %}

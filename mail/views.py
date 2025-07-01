@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-
+from django.core.cache import cache
 from mail.forms import MailForm
 from mail.models import Mail
 
@@ -22,9 +22,11 @@ class MailListView(ListView):
 
         if is_manager:
             # Менеджеры видят ВСЕ письма
+            cache.clear()
             queryset = Mail.objects.all()
         else:
             # Пользователи видят ТОЛЬКО свои письма
+            cache.clear()
             queryset = Mail.objects.filter(author=user)
 
         return queryset
@@ -34,6 +36,7 @@ class MailListView(ListView):
         user = self.request.user
         is_manager = user.is_superuser or user.groups.filter(name="Manager").exists()
         context["is_manager"] = is_manager
+        cache.clear()
         return context
 
 
@@ -44,6 +47,7 @@ class MailDetailView(DetailView):
 
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
+        cache.clear()
         return obj
 
     def get_queryset(self):
@@ -52,11 +56,13 @@ class MailDetailView(DetailView):
 
         if is_manager:
             # Менеджеры могут редактировать любое письмо
+            cache.clear()
             queryset = Mail.objects.all()
         else:
             # Пользователи могут редактировать только свои письма
+            cache.clear()
             queryset = Mail.objects.filter(author=user)
-
+        cache.clear()
         return queryset
 
 
@@ -66,12 +72,14 @@ class MailCreateView(CreateView):
     form_class = MailForm
 
     def get_success_url(self):
+        cache.clear()
         return reverse_lazy("mail:mail_list")
 
     def form_valid(self, form):
         mail = form.save(commit=False)
         mail.author = self.request.user
         mail.save()
+        cache.clear()
         return super().form_valid(form)
 
     def create_message(request):
@@ -81,9 +89,11 @@ class MailCreateView(CreateView):
                 mail = form.save(commit=False)
                 mail.author = request.user
                 mail.save()
+                cache.clear()
                 return redirect("mail:mail_list")  # перенаправляем на страницу создания рассылки
         else:
             form = MailForm()
+        cache.clear()
         return render(request, "mail/mail_form.html", {"form": form})
 
 
@@ -96,16 +106,20 @@ class MailUpdateView(UpdateView):
     success_url = reverse_lazy("mail:mail_list")
 
     def is_manager(self):
+        cache.clear()
         return self.request.user.is_staff or self.request.user.groups.filter(name="Manager").exists()
 
     def dispatch(self, request, *args, **kwargs):
         # Менеджеры могут читать, но не редактировать
         if self.is_manager:
+            cache.clear()
             return HttpResponseForbidden("Вам запрещено редактировать это сообщение.")
+        cache.clear()
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         # Обычные пользователи могут редактировать только свои письма
+        cache.clear()
         return Mail.objects.filter(author=self.request.user)
 
 
@@ -121,9 +135,11 @@ class MailDeleteView(DeleteView):
 
         if is_manager:
             # Менеджеры могут удалить любое письмо
+
             queryset = Mail.objects.all()
         else:
             # Пользователи могут удалить только свои письма
-            queryset = Mail.objects.filter(author=user)
 
+            queryset = Mail.objects.filter(author=user)
+        cache.clear()
         return queryset
