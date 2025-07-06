@@ -1,0 +1,9 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+
+<h1>{{ mail.subject_letter }}</h1>
+<p>{{ mail.body_letter }}</p>
+<p>Опубликовано: {{ mail.created_at }}</p>
+<a class="p-2 btn btn-outline-primary" href="{% url 'mail:mail_update' mail.id %}">Редактировать</a>
+<a class="p-2 btn btn-outline-primary" href="{% url 'mail:mail_delete' mail.id %}">Удалить</a>
+{% endblock %}
