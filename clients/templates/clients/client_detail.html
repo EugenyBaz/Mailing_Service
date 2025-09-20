@@ -1,0 +1,10 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+
+<h1>{{ client.name }}</h1>
+<p>{{ client.email }}</p>
+<p>{{ client.comment }}</p>
+<p>Опубликовано: {{ client.created_at }}</p>
+<a class="p-2 btn btn-outline-primary" href="{% url 'clients:client_update' client.id %}">Редактировать</a>
+<a class="p-2 btn btn-outline-primary" href="{% url 'clients:client_delete' client.id %}">Удалить</a>
+{% endblock %}

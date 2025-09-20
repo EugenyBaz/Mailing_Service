@@ -1,0 +1,22 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+
+<div class = "container my-2">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+        <h1>Количество сообщений: {{ mails.count }} шт.</h1>
+        {% for mail in mails %}
+            <article>
+                <h2><a href="{% url 'mail:mail_detail' mail.id %}" style="font-size: 18px; color: primary;">{{ mail.subject_letter }}</a></h2>
+
+            </article>
+        {% empty %}
+            <p>Пока здесь нет ни одной записи!</p>
+
+        {% endfor %}
+        <a href="{% url 'mail:mail_create' %}" class="btn btn-primary mt-3">Создать сообщение</a>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

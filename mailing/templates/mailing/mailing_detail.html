@@ -1,0 +1,45 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+
+<h1> Тема cообщения : {{ mailing.message.subject_letter }}</h1>
+<p> Дата и время первой отправки : {{ mailing.date_and_time_first_launched}}</p>
+<p> Дата и время окончания отправки : {{ mailing.date_and_time_finish_launched }}</p>
+<p> Статус : {{ mailing.get_status_display }}</p>
+<p> Получатели: {{ mailing.client_names }}</p>
+<p> Сообщение : {{ mailing.message.body_letter}}</p>
+
+{% if attempts %}
+<h2>История попыток отправки:</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Время попытки</th>
+            <th>Статус</th>
+            <th>Ответ сервера</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for attempt in attempts %}
+        <tr>
+            <td>{{ attempt.datetime_attempt|date:'d M Y H:i' }}</td>
+            <td>{% if attempt.status == 'success' %}<span class="badge bg-success">Успешно</span>{% else %}<span class="badge bg-danger">Ошибка</span>{% endif %}</td>
+            <td>{{ attempt.server_response }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">Пока нет попыток отправки.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Информация о попытках отправки недоступна.</p>
+
+{% endif %}
+<a class="p-2 btn btn-outline-primary" href="{% url 'mailing:mailing_update' mailing.id %}">Редактировать</a>
+<a class="p-2 btn btn-outline-primary" href="{% url 'mailing:mailing_delete' mailing.id %}">Удалить</a>
+{% endblock %}
+
+
+
+

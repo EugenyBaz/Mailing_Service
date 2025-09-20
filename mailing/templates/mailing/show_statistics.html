@@ -1,0 +1,116 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+{% if type == 'manager' %}
+
+    <div class="container py-5">
+    <h2>Общая информация о рассылках</h2>
+    <div class="row">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Количество общих рассылок</h5>
+                    <p class="card-text text-center">{{ total_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Активных общих рассылок</h5>
+                    <p class="card-text text-center">{{ active_mailings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Всего общих попыток отправки</h5>
+                    <p class="card-text text-center">{{ total_attempts }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Успешных общих отправок</h5>
+                    <p class="card-text text-center">{{ successful_attempts }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body bg-light">
+                    <h5 class="card-title text-center">Неудачных общих отправок</h5>
+                    <p class="card-text text-center">{{ failure_attempts }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body bg-light">
+                        <h5 class="card-title text-center">Кол-во общих уникальных получателей</h5>
+                        <p class="card-text text-center">{{ unique_recipients }}</p>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+{% else %}
+
+    <div class="container py-5">
+        <h2>Моя статистика рассылок</h2>
+        <div class="row">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body bg-light">
+                        <h5 class="card-title text-center">Количество моих рассылок</h5>
+                        <p class="card-text text-center">{{ total_mailings }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body bg-light">
+                        <h5 class="card-title text-center">Активных моих рассылок</h5>
+                        <p class="card-text text-center">{{ active_mailings }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body bg-light">
+                        <h5 class="card-title text-center">Всего моих попыток отправки</h5>
+                        <p class="card-text text-center">{{ total_attempts }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body bg-light">
+                        <h5 class="card-title text-center">Успешных моих отправок</h5>
+                        <p class="card-text text-center">{{ successful_attempts }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body bg-light">
+                        <h5 class="card-title text-center">Неудачных моих отправок</h5>
+                        <p class="card-text text-center">{{ failure_attempts }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-body bg-light">
+                        <h5 class="card-title text-center">Кол-во моих уникальных получателей</h5>
+                        <p class="card-text text-center">{{ unique_recipients }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
